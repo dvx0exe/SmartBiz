@@ -91,6 +91,69 @@ window.patch = (url, body) => api(url, { method:'PATCH',  body: body ? JSON.stri
 window.del   = url         => api(url, { method:'DELETE' });
 
 document.addEventListener('DOMContentLoaded', () => {
+  /* ═══════════════════════════════════════════════════════
+     MOBILE NAV — injeta hamburger, overlay e bottom-nav
+     em todas as páginas automaticamente
+  ═══════════════════════════════════════════════════════ */
+  const sidebar = document.querySelector('.sidebar');
+  const topbar  = document.querySelector('.topbar');
+  const topbarTitle = document.querySelector('.topbar-title');
+
+  if (sidebar && topbar) {
+    // 1. Overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'sidebar-overlay';
+    overlay.id = 'sb-overlay';
+    sidebar.after(overlay);
+
+    // 2. Hamburger no topo esquerdo
+    const hamburger = document.createElement('button');
+    hamburger.className = 'btn-hamburger';
+    hamburger.setAttribute('aria-label', 'Abrir menu');
+    hamburger.innerHTML = '<svg width="18" height="14" viewBox="0 0 18 14" fill="none"><rect width="18" height="2" rx="1" fill="currentColor"/><rect y="6" width="18" height="2" rx="1" fill="currentColor"/><rect y="12" width="18" height="2" rx="1" fill="currentColor"/></svg>';
+    if (topbarTitle) {
+      topbar.insertBefore(hamburger, topbarTitle);
+    } else {
+      topbar.prepend(hamburger);
+    }
+
+    // 3. Bottom nav
+    const curPage = window.location.pathname.split('/').pop() || 'index.html';
+    const navItems = [
+      { href: 'index.html',    icon: '📊', label: 'Dashboard' },
+      { href: 'pdv.html',      icon: '🛒', label: 'PDV'       },
+      { href: 'estoque.html',  icon: '📦', label: 'Estoque'   },
+      { href: 'caixa.html',    icon: '💰', label: 'Caixa'     },
+      { id: 'btn-bnav-menu',   icon: '☰',  label: 'Menu'      },
+    ];
+
+    const bottomNav = document.createElement('nav');
+    bottomNav.className = 'bottom-nav';
+    bottomNav.innerHTML = navItems.map(item => {
+      if (item.id) {
+        return `<button class="bottom-nav-item" id="${item.id}"><span class="bottom-nav-icon">${item.icon}</span>${item.label}</button>`;
+      }
+      const active = curPage === item.href ? ' active' : '';
+      return `<a href="${item.href}" class="bottom-nav-item${active}"><span class="bottom-nav-icon">${item.icon}</span>${item.label}</a>`;
+    }).join('');
+    document.body.appendChild(bottomNav);
+
+    // 4. Lógica de toggle
+    const openSidebar  = () => { sidebar.classList.add('open');  overlay.classList.add('open');  };
+    const closeSidebar = () => { sidebar.classList.remove('open'); overlay.classList.remove('open'); };
+
+    hamburger.addEventListener('click', openSidebar);
+    overlay.addEventListener('click', closeSidebar);
+
+    // Fechar ao clicar num link do sidebar no mobile
+    sidebar.querySelectorAll('.nav-item').forEach(a => {
+      a.addEventListener('click', () => { if (window.innerWidth <= 900) closeSidebar(); });
+    });
+
+    const btnMenu = document.getElementById('btn-bnav-menu');
+    if (btnMenu) btnMenu.addEventListener('click', openSidebar);
+  }
+
   const role  = localStorage.getItem('sb_role') || '';
   const email = localStorage.getItem('sb_email') || '';
   const nome  = window.getViewingBusinessNome();

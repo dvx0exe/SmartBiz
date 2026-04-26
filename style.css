@@ -290,19 +290,39 @@ tbody tr:last-child td { border-bottom:none; }
   /* Hamburger visível */
   .btn-hamburger { display:flex; }
 
-  /* Topbar responsiva */
-  .topbar { padding:0 14px; height:auto; }
-  .topbar-title { font-size:14px; padding:14px 0; }
+  /* Topbar responsiva — primeira linha: [☰] [título], segunda linha: [ações] */
+  .topbar {
+    padding:0 14px;
+    height:auto;
+    justify-content:flex-start;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:0;
+  }
+  .topbar-title {
+    font-size:14px;
+    padding:13px 0;
+    flex:1;
+    min-width:0;
+    gap:8px;
+  }
   .topbar-title .page-icon { font-size:15px; }
   .topbar-right {
-    flex:0 0 100%; padding:0 0 10px; gap:8px;
-    overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none;
+    flex:0 0 100%;
+    padding:0 0 10px;
+    gap:8px;
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+    justify-content:flex-start;
   }
   .topbar-right::-webkit-scrollbar { display:none; }
   .topbar-right .badge-online,
   .topbar-right #clock { display:none !important; }
-  .topbar-right .form-input { font-size:13px; padding:8px 11px; }
+  .topbar-right .form-input  { font-size:13px; padding:8px 11px; }
   .topbar-right .form-select { font-size:13px; padding:8px 10px; }
+  /* Esconder topbar-right se vazio (sem botões visíveis) */
+  .topbar-right:empty { display:none; }
 
   /* Toast acima do bottom nav */
   .toast { bottom:calc(var(--bottom-nav-h) + 12px); left:12px; right:12px; text-align:center; }
@@ -325,6 +345,18 @@ tbody tr:last-child td { border-bottom:none; }
   /* Modal slide-up */
   .modal-bg { align-items:flex-end; padding:0; }
   .modal { max-width:100%; width:100%; border-radius:16px 16px 0 0; padding:24px 20px 36px; animation:slideup .3s cubic-bezier(.4,0,.2,1); max-height:92vh; }
+
+  /* PDV — carrinho abaixo dos produtos */
+  .pdv-wrap { grid-template-columns:1fr !important; }
+  .produto-grid { grid-template-columns:repeat(2,1fr) !important; }
+  .carrinho { position:static !important; }
+  .cart-total-val { font-size:22px !important; }
+
+  /* Panels: remover overflow hidden p/ não cortar modal */
+  .panel { overflow:visible; }
+
+  /* Botões de ação no topbar — menores no mobile */
+  .topbar-right .btn { padding:7px 13px; font-size:9px; }
 }
 
 /* ══ MOBILE PEQUENO (≤480px) ══════════════════════════════════ */
