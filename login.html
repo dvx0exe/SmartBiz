@@ -61,53 +61,6 @@
   }
   .error-banner.show{display:block;}
 
-  /* ── aviso ngrok ── */
-  .ngrok-warn{
-    margin-top:16px;
-    background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);
-    border-radius:6px;padding:14px 16px;text-align:left;display:none;
-  }
-  .ngrok-warn.show{display:block;}
-  .ngrok-warn-title{
-    font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;
-    text-transform:uppercase;color:var(--yellow);margin-bottom:8px;
-  }
-  .ngrok-warn-text{font-size:12px;color:var(--text-dim);line-height:1.6;margin-bottom:10px;}
-  .btn-visit{
-    display:inline-flex;align-items:center;gap:6px;
-    background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.3);
-    color:var(--yellow);border-radius:4px;padding:7px 12px;
-    font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;
-    text-transform:uppercase;cursor:pointer;text-decoration:none;
-    transition:all .2s;
-  }
-  .btn-visit:hover{background:rgba(245,158,11,.25);}
-
-  /* ── configurador servidor ── */
-  .server-config{margin-top:20px;border-top:1px solid var(--border);padding-top:14px;text-align:left;}
-  .server-toggle{display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;}
-  .server-toggle-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--text-dim);text-transform:uppercase;}
-  .server-status{font-family:'DM Mono',monospace;font-size:9px;color:var(--emerald);letter-spacing:1px;}
-  .server-status.offline{color:var(--yellow);}
-  .server-fields{margin-top:12px;display:none;}
-  .server-fields.open{display:block;}
-  .server-input{
-    width:100%;background:#0a0f0c;border:1px solid var(--border);
-    border-radius:4px;padding:9px 12px;color:var(--text);
-    font-family:'DM Mono',monospace;font-size:11px;outline:none;transition:border-color .2s;
-  }
-  .server-input:focus{border-color:var(--emerald);}
-  .server-input::placeholder{color:var(--text-dim);}
-  .server-save{
-    margin-top:8px;width:100%;
-    background:var(--emerald-dim);border:1px solid rgba(0,200,150,.3);
-    color:var(--emerald);border-radius:4px;padding:8px;
-    font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;
-    text-transform:uppercase;cursor:pointer;transition:all .2s;
-  }
-  .server-save:hover{background:rgba(0,200,150,.28);}
-  .server-hint{margin-top:8px;font-family:'DM Mono',monospace;font-size:9px;color:var(--text-dim);line-height:1.6;}
-
   .footer-note{margin-top:20px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1px;color:var(--text-dim);text-align:center;text-transform:uppercase;}
 </style>
 </head>
@@ -132,81 +85,17 @@
         </svg>
         Entrar com Google
       </a>
-
-      <!-- Aviso ngrok: aparece quando o servidor é ngrok e o aviso ainda não foi aceito -->
-      <div class="ngrok-warn" id="ngrok-warn">
-        <div class="ngrok-warn-title">⚠ Passo necessário</div>
-        <div class="ngrok-warn-text">
-          O servidor usa ngrok e exibe um aviso de segurança na primeira visita.
-          Clique abaixo, aceite o aviso (<strong>Visit Site</strong>), feche a aba e volte aqui para fazer login.
-        </div>
-        <a id="btn-visit" href="#" target="_blank" class="btn-visit">
-          🔗 Abrir servidor e aceitar aviso
-        </a>
-      </div>
-
-      <!-- Configurador de servidor -->
-      <div class="server-config">
-        <div class="server-toggle" onclick="toggleConfig()">
-          <span class="server-toggle-label">⚙ Servidor</span>
-          <span class="server-status" id="server-status">—</span>
-        </div>
-        <div class="server-fields" id="server-fields">
-          <input type="text" id="server-input" class="server-input" placeholder="https://smartbiz-api.fly.dev"/>
-          <button class="server-save" onclick="salvarServidor()">Salvar e recarregar</button>
-          <div class="server-hint">Cole aqui a URL do backend se precisar alterar.</div>
-        </div>
-      </div>
     </div>
     <div class="footer-note">SmartBiz v1.0 · Uniube 2026</div>
   </div>
 
   <script src="api.js"></script>
   <script>
-    var configOpen = false;
-    var backendUrl = localStorage.getItem('sb_backend_url') || 'https://smartbiz-api.fly.dev';
-    var isNgrok    = backendUrl.includes('ngrok');
+    // URL do servidor agora é fixa
+    var backendUrl = 'https://smartbiz-api.fly.dev';
 
     function init() {
       document.getElementById('btn-google').href = backendUrl + '/oauth2/authorization/google';
-
-      document.getElementById('btn-visit').href = backendUrl;
-
-      // Status
-      var el = document.getElementById('server-status');
-      if (!isNgrok) {
-        el.textContent = 'fly.dev';
-        el.className   = 'server-status offline';
-      } else {
-        var short = backendUrl.replace('https://', '').split('.')[0];
-        el.textContent = short;
-        el.className   = 'server-status';
-      }
-
-      document.getElementById('server-input').value = backendUrl;
-
-      if (isNgrok && !localStorage.getItem('ngrok_accepted_' + backendUrl)) {
-        document.getElementById('ngrok-warn').classList.add('show');
-
-        window.addEventListener('focus', function onFocus() {
-          localStorage.setItem('ngrok_accepted_' + backendUrl, '1');
-          document.getElementById('ngrok-warn').classList.remove('show');
-          window.removeEventListener('focus', onFocus);
-        });
-      }
-    }
-
-    function toggleConfig() {
-      configOpen = !configOpen;
-      document.getElementById('server-fields').classList.toggle('open', configOpen);
-    }
-
-    function salvarServidor() {
-      var val = document.getElementById('server-input').value.trim().replace(/\/$/, '');
-      if (!val) return;
-      localStorage.removeItem('ngrok_accepted_' + backendUrl);
-      localStorage.setItem('sb_backend_url', val);
-      location.reload();
     }
 
     init();
