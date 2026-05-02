@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SmartBiz · Gerenciar NF-e</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+  /* ── Grid de negócios ── */
+  .nfe-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+  }
+
+  .nfe-biz-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    transition: border-color .2s, transform .2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .nfe-biz-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    opacity: 0; transition: opacity .2s;
+  }
+  .nfe-biz-card.habilitado { border-color: rgba(0,200,150,.35); }
+  .nfe-biz-card.habilitado::before { background: var(--emerald); opacity: 1; }
+  .nfe-biz-card.bloqueado  { border-color: var(--border); }
+  .nfe-biz-card.bloqueado::before  { background: var(--yellow); }
+  .nfe-biz-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.25); }
+
+  .card-top {
+    display: flex; align-items: flex-start;
+    justify-content: space-between; margin-bottom: 14px;
+  }
+  .card-icon {
+    width: 40px; height: 40px; border-radius: 8px;
+    background: var(--emerald-dim);
+    border: 1px solid rgba(0,200,150,.2);
+    display: flex; align-items: center; justify-content: center; font-size: 20px;
+  }
+  .card-name   { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: #fff; }
+  .card-tipo   { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 2px; color: var(--emerald); text-transform: uppercase; margin: 3px 0 8px; }
+  .card-email  { font-size: 11px; color: var(--text-dim); margin-bottom: 14px; }
+
+  .nfe-status-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: 'DM Mono', monospace; font-size: 9px;
+    letter-spacing: .08em; text-transform: uppercase;
+    padding: 4px 10px; border-radius: 4px;
+    margin-bottom: 14px;
+  }
+  .nfe-status-badge.on  { background: rgba(0,200,150,.1);  color: var(--emerald); border: 1px solid rgba(0,200,150,.25); }
+  .nfe-status-badge.off { background: rgba(245,158,11,.08); color: var(--yellow);  border: 1px solid rgba(245,158,11,.2); }
+  .nfe-status-badge.loading { background: var(--surface2); color: var(--text-dim); border: 1px solid var(--border); }
+  .badge-dot { width: 6px; height: 6px; border-radius: 50%; }
+  .on  .badge-dot { background: var(--emerald); }
+  .off .badge-dot { background: var(--yellow); }
+
+  .card-details {
+    font-size: 11px; color: var(--text-dim);
+    font-family: 'DM Mono', monospace;
+    margin-bottom: 16px; line-height: 1.7;
+    display: none;
+  }
+  .card-details.show { display: block; }
+  .card-detail-row { display: flex; gap: 6px; }
+  .card-detail-row span:first-child { color: var(--text-dim); min-width: 80px; }
+  .card-detail-row span:last-child  { color: var(--text); }
+
+  .card-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  /* ── Modal / painel lateral de configuração ── */
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 200;
+    background: rgba(0,0,0,.7); backdrop-filter: blur(4px);
+    display: none; align-items: center; justify-content: center; padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    width: 100%; max-width: 520px;
+    max-height: 90vh; overflow-y: auto;
+    animation: slideUp .2s ease;
+  }
+  @keyframes slideUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+
+  .modal-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .modal-title { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; }
+  .modal-close {
+    background: none; border: none; color: var(--text-dim);
+    font-size: 20px; cursor: pointer; line-height: 1;
+    transition: color .2s; padding: 4px;
+  }
+  .modal-close:hover { color: var(--text); }
+  .modal-body { padding: 20px 24px; }
+  .modal-footer {
+    display: flex; gap: 10px; padding: 16px 24px;
+    border-top: 1px solid var(--border);
+  }
+
+  .info-strip {
+    background: rgba(0,200,150,.06);
+    border: 1px solid rgba(0,200,150,.15);
+    border-radius: 6px; padding: 12px 14px;
+    font-size: 12px; color: var(--text-mid);
+    margin-bottom: 20px; line-height: 1.6;
+  }
+  .info-strip strong { color: var(--emerald); }
+
+  .danger-strip {
+    background: rgba(240,82,82,.08);
+    border: 1px solid rgba(240,82,82,.2);
+    border-radius: 6px; padding: 12px 14px;
+    font-size: 12px; color: #f09090;
+    line-height: 1.6;
+  }
+
+  /* ── Stats ── */
+  .nfe-stats {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px;
+  }
+  @media (max-width: 600px) {
+    .nfe-stats { grid-template-columns: 1fr 1fr; }
+    .nfe-grid  { grid-template-columns: 1fr; }
+    .modal { max-width: 100%; }
+  }
+
+  /* ── Filtro ── */
+  .filter-row {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  }
+  .filter-btn {
+    font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: .06em;
+    text-transform: uppercase; padding: 5px 14px; border-radius: 4px;
+    cursor: pointer; transition: all .2s;
+    border: 1px solid var(--border); background: transparent; color: var(--text-dim);
+  }
+  .filter-btn.active { background: var(--emerald); color: #000; border-color: var(--emerald); font-weight: 700; }
+  .filter-btn:hover:not(.active) { border-color: var(--emerald); color: var(--emerald); }
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-logo">Smart<span>Biz</span><small>Gerência</small></div>
+  <div class="nav-group-label">Gerência</div>
+  <a class="nav-item" href="admin-dashboard.html"><span class="nav-icon">🏢</span>Todos os Negócios</a>
+  <a class="nav-item" href="admin-cadastro.html"><span class="nav-icon">➕</span>Cadastrar Negócio</a>
+  <a class="nav-item active" href="admin-nfe.html"><span class="nav-icon">🧾</span>Gerenciar NF-e</a>
+  <div class="sidebar-footer"><p>SmartBiz v1.0 · Uniube 2026</p></div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title"><span class="page-icon">🧾</span>Gerenciar Módulo NF-e</div>
+    <div class="topbar-right">
+      <span class="badge-online"><span class="dot-live"></span>ADMIN</span>
+      <button class="btn btn-ghost btn-sm" onclick="carregar()">↻ Atualizar</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- Stats ── -->
+    <div class="nfe-stats">
+      <div class="stat-card">
+        <div class="stat-label">Total de Negócios</div>
+        <div class="stat-value" id="s-total">—</div>
+        <div class="stat-delta">cadastrados</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">NF-e Habilitada</div>
+        <div class="stat-value green" id="s-on">—</div>
+        <div class="stat-delta">com módulo ativo</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Sem NF-e</div>
+        <div class="stat-value" id="s-off" style="color:var(--yellow)">—</div>
+        <div class="stat-delta">plano Essencial</div>
+      </div>
+    </div>
+
+    <!-- Painel principal ── -->
+    <div class="panel">
+      <div class="panel-header">
+        Negócios &amp; Status NF-e
+        <div class="filter-row">
+          <input id="search-input" class="form-input" placeholder="Buscar negócio..."
+            style="width:180px;padding:5px 10px;font-size:12px;" oninput="renderCards()">
+          <button class="filter-btn active" id="f-todos"    onclick="setFiltro('todos')">Todos</button>
+          <button class="filter-btn"        id="f-habilitado" onclick="setFiltro('habilitado')">✓ Com NF-e</button>
+          <button class="filter-btn"        id="f-bloqueado"  onclick="setFiltro('bloqueado')">🔒 Sem NF-e</button>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div id="nfe-grid" class="nfe-grid">
+          <div class="empty-state">Carregando negócios...</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<!-- ══════════════════════════════════════════════════════════════
+     MODAL — Habilitar / Editar NF-e
+     ══════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-habilitar">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">Habilitar Módulo NF-e</div>
+      <button class="modal-close" onclick="fecharModal()">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <div class="info-strip">
+        Preencha as credenciais da <strong>Focus NFe / Enotas</strong> para este negócio.
+        Após salvar, o módulo NF-e fica <strong>desbloqueado automaticamente</strong> no painel do cliente.
+      </div>
+
+      <input type="hidden" id="m-biz-id">
+
+      <!-- Negócio info (read-only) -->
+      <div class="form-group">
+        <label class="form-label">Negócio</label>
+        <input class="form-input" id="m-biz-nome" readonly
+          style="opacity:.6;cursor:default;background:var(--surface2);">
+      </div>
+
+      <!-- Ambiente -->
+      <div class="form-group">
+        <label class="form-label">Ambiente *</label>
+        <select class="form-select" id="m-ambiente">
+          <option value="homologacao">🟡 Homologação (testes — notas sem valor fiscal)</option>
+          <option value="producao">🟢 Produção (notas fiscais reais)</option>
+        </select>
+        <div class="field-hint" style="font-size:11px;color:var(--text-dim);margin-top:4px;">
+          Use homologação para testar. Mude para produção quando o cliente estiver com tudo ok.
+        </div>
+      </div>
+
+      <!-- Token -->
+      <div class="form-group">
+        <label class="form-label">Token da API NF-e *
+          <span style="font-size:10px;color:var(--text-dim);font-weight:400;">
+            (Focus NFe, Enotas, NFe.io...)
+          </span>
+        </label>
+        <input class="form-input" id="m-token" placeholder="Cole o token gerado na plataforma NF-e">
+        <div class="field-hint" style="font-size:11px;color:var(--text-dim);margin-top:4px;">
+          Focus NFe: <code style="color:var(--emerald)">focusnfe.com.br → Configurações → Token</code>
+        </div>
+      </div>
+
+      <!-- CNPJ -->
+      <div class="form-group">
+        <label class="form-label">CNPJ do Emitente *</label>
+        <input class="form-input" id="m-cnpj" placeholder="00.000.000/0001-00" maxlength="18">
+      </div>
+
+      <!-- Nome emitente -->
+      <div class="form-group">
+        <label class="form-label">Razão Social *</label>
+        <input class="form-input" id="m-nome-emit" placeholder="ex: Padaria São João LTDA">
+      </div>
+
+      <!-- Endereço -->
+      <div class="form-group">
+        <label class="form-label">Endereço do Emitente</label>
+        <input class="form-input" id="m-endereco" placeholder="Rua, número, bairro, cidade/UF">
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" id="btn-salvar-cred" onclick="salvarCredencial()">
+        Salvar e Habilitar NF-e
+      </button>
+      <button class="btn btn-ghost" onclick="fecharModal()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     MODAL — Desabilitar NF-e (confirmação)
+     ══════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-desabilitar">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-header">
+      <div class="modal-title">Desabilitar NF-e</div>
+      <button class="modal-close" onclick="fecharModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="danger-strip">
+        ⚠️ Ao desabilitar, o módulo NF-e fica <strong>bloqueado imediatamente</strong> para
+        <strong id="d-biz-nome">este negócio</strong>. O cliente verá a tela de "módulo não habilitado"
+        na próxima vez que acessar.
+      </div>
+      <input type="hidden" id="d-biz-id">
+      <p style="font-size:13px;color:var(--text-mid);margin-top:16px;">
+        As credenciais serão removidas. Para reativar, será necessário cadastrá-las novamente.
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-danger" id="btn-confirm-desab" onclick="confirmarDesabilitar()">
+        Sim, desabilitar NF-e
+      </button>
+      <button class="btn btn-ghost" onclick="fecharModal()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="api.js"></script>
+<script>
+let todosNegocios = [];   // { ...negocio, _sefaz: { habilitado, ambiente, cnpjEmitente, nomeEmitente } }
+let filtroAtual   = 'todos';
+
+// ── Carregamento ────────────────────────────────────────────────────────────
+
+async function carregar() {
+  document.getElementById('nfe-grid').innerHTML = '<div class="empty-state">Carregando...</div>';
+  try {
+    const negocios = await get(API.negocios) || [];
+
+    // Busca status SEFAZ de todos em paralelo
+    const comStatus = await Promise.all(negocios.map(async n => {
+      try {
+        const s = await get(`${API.negocios}/${n.id}/sefaz-status`);
+        return { ...n, _sefaz: s };
+      } catch {
+        return { ...n, _sefaz: { habilitado: false, ambiente: '', cnpjEmitente: '', nomeEmitente: '' } };
+      }
+    }));
+
+    todosNegocios = comStatus;
+    atualizarStats();
+    renderCards();
+  } catch (e) {
+    toast('Erro ao carregar negócios: ' + e.message, 'err');
+    document.getElementById('nfe-grid').innerHTML =
+      '<div class="empty-state">Erro ao conectar na API.</div>';
+  }
+}
+
+function atualizarStats() {
+  const total   = todosNegocios.length;
+  const habOn   = todosNegocios.filter(n => n._sefaz?.habilitado).length;
+  const habOff  = total - habOn;
+  document.getElementById('s-total').textContent = total;
+  document.getElementById('s-on').textContent    = habOn;
+  document.getElementById('s-off').textContent   = habOff;
+}
+
+// ── Render ───────────────────────────────────────────────────────────────────
+
+const TIPO_ICON = {
+  'Padaria':'🥐','Barbearia':'✂️','Loja':'🛒','Restaurante':'🍽️',
+  'Farmácia':'💊','Mercado':'🛒','Academia':'💪','Café':'☕',
+  'Pet Shop':'🐾','Salão':'💅','Clínica':'🏥','Oficina':'🔧',
+};
+function iconeTipo(tipo) {
+  const t = tipo || '';
+  for (const [k,v] of Object.entries(TIPO_ICON)) {
+    if (t.toLowerCase().includes(k.toLowerCase())) return v;
+  }
+  return '🏪';
+}
+
+function setFiltro(f) {
+  filtroAtual = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('f-' + f).classList.add('active');
+  renderCards();
+}
+
+function renderCards() {
+  const q = (document.getElementById('search-input').value || '').toLowerCase();
+
+  let lista = todosNegocios.filter(n => {
+    const matchSearch =
+      (n.nome || '').toLowerCase().includes(q) ||
+      (n.tipo || '').toLowerCase().includes(q) ||
+      (n.emailVinculado || '').toLowerCase().includes(q);
+    const matchFiltro =
+      filtroAtual === 'todos'      ? true :
+      filtroAtual === 'habilitado' ? n._sefaz?.habilitado :
+                                     !n._sefaz?.habilitado;
+    return matchSearch && matchFiltro;
+  });
+
+  const grid = document.getElementById('nfe-grid');
+  if (!lista.length) {
+    grid.innerHTML = '<div class="empty-state">Nenhum negócio encontrado.</div>';
+    return;
+  }
+
+  grid.innerHTML = lista.map(n => {
+    const s         = n._sefaz || {};
+    const on        = s.habilitado;
+    const classCss  = on ? 'habilitado' : 'bloqueado';
+    const badgeCss  = on ? 'on' : 'off';
+    const badgeText = on
+      ? (s.ambiente === 'producao' ? '🟢 Produção' : '🟡 Homologação')
+      : '🔒 Sem NF-e';
+
+    const details = on ? `
+      <div class="card-details show" id="det-${n.id}">
+        <div class="card-detail-row"><span>CNPJ:</span><span>${s.cnpjEmitente || '—'}</span></div>
+        <div class="card-detail-row"><span>Emitente:</span><span>${s.nomeEmitente || '—'}</span></div>
+        <div class="card-detail-row"><span>Ambiente:</span><span>${s.ambiente || '—'}</span></div>
+      </div>` : '';
+
+    const actions = on ? `
+      <button class="btn btn-ghost btn-sm"
+        onclick="abrirHabilitar('${n.id}','${esc(n.nome)}','${esc(s.cnpjEmitente)}','${esc(s.nomeEmitente)}','${esc(s.enderecoEmitente)}','${s.ambiente}','')">
+        ✏️ Editar
+      </button>
+      <button class="btn btn-danger btn-sm"
+        onclick="abrirDesabilitar('${n.id}','${esc(n.nome)}')">
+        Desabilitar
+      </button>` : `
+      <button class="btn btn-primary btn-sm"
+        onclick="abrirHabilitar('${n.id}','${esc(n.nome)}','','','','homologacao','')">
+        🧾 Habilitar NF-e
+      </button>`;
+
+    return `
+      <div class="nfe-biz-card ${classCss}">
+        <div class="card-top">
+          <div class="card-icon">${iconeTipo(n.tipo)}</div>
+          <span class="nfe-status-badge ${badgeCss}">
+            <span class="badge-dot"></span>${badgeText}
+          </span>
+        </div>
+        <div class="card-name">${n.nome || '—'}</div>
+        <div class="card-tipo">${n.tipo || '—'}</div>
+        <div class="card-email">✉ ${n.emailVinculado || 'Sem e-mail'}</div>
+        ${details}
+        <div class="card-actions">${actions}</div>
+      </div>`;
+  }).join('');
+}
+
+function esc(s) { return (s || '').replace(/'/g, "\\'").replace(/"/g, '&quot;'); }
+
+// ── Modal Habilitar ──────────────────────────────────────────────────────────
+
+function abrirHabilitar(id, nome, cnpj, nomeEmit, endereco, ambiente, token) {
+  document.getElementById('m-biz-id').value       = id;
+  document.getElementById('m-biz-nome').value     = nome;
+  document.getElementById('m-cnpj').value         = cnpj || '';
+  document.getElementById('m-nome-emit').value    = nomeEmit || '';
+  document.getElementById('m-endereco').value     = endereco || '';
+  document.getElementById('m-ambiente').value     = ambiente || 'homologacao';
+  document.getElementById('m-token').value        = token || '';
+  document.getElementById('modal-title').textContent =
+    cnpj ? 'Editar Credenciais NF-e' : 'Habilitar Módulo NF-e';
+  document.getElementById('btn-salvar-cred').textContent =
+    cnpj ? 'Salvar Alterações' : 'Salvar e Habilitar NF-e';
+  document.getElementById('modal-habilitar').classList.add('open');
+  setTimeout(() => document.getElementById('m-token').focus(), 100);
+}
+
+async function salvarCredencial() {
+  const id       = document.getElementById('m-biz-id').value;
+  const token    = document.getElementById('m-token').value.trim();
+  const ambiente = document.getElementById('m-ambiente').value;
+  const cnpj     = document.getElementById('m-cnpj').value.trim();
+  const nome     = document.getElementById('m-nome-emit').value.trim();
+  const endereco = document.getElementById('m-endereco').value.trim();
+
+  if (!token)    { toast('Informe o token da API NF-e.', 'err'); return; }
+  if (!cnpj)     { toast('Informe o CNPJ do emitente.', 'err'); return; }
+  if (!nome)     { toast('Informe a Razão Social do emitente.', 'err'); return; }
+
+  const btn = document.getElementById('btn-salvar-cred');
+  const restore = spin(btn, 'Salvando...');
+  try {
+    await post(`${API.negocios}/${id}/sefaz-credencial`, {
+      tokenApiNfe:        token,
+      ambiente:           ambiente,
+      cnpjEmitente:       cnpj.replace(/\D/g, ''),
+      nomeEmitente:       nome,
+      enderecoEmitente:   endereco
+    });
+    toast('✓ NF-e habilitada com sucesso!');
+    fecharModal();
+    carregar();
+  } catch (e) {
+    toast('Erro ao salvar credencial: ' + e.message, 'err');
+  } finally {
+    restore();
+  }
+}
+
+// ── Modal Desabilitar ────────────────────────────────────────────────────────
+
+function abrirDesabilitar(id, nome) {
+  document.getElementById('d-biz-id').value          = id;
+  document.getElementById('d-biz-nome').textContent  = nome;
+  document.getElementById('modal-desabilitar').classList.add('open');
+}
+
+async function confirmarDesabilitar() {
+  const id  = document.getElementById('d-biz-id').value;
+  const btn = document.getElementById('btn-confirm-desab');
+  const restore = spin(btn, 'Desabilitando...');
+  try {
+    await del(`${API.negocios}/${id}/sefaz-credencial`);
+    toast('Módulo NF-e desabilitado.');
+    fecharModal();
+    carregar();
+  } catch (e) {
+    toast('Erro: ' + e.message, 'err');
+  } finally {
+    restore();
+  }
+}
+
+// ── Utilitários ──────────────────────────────────────────────────────────────
+
+function fecharModal() {
+  document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('open'));
+}
+
+// Fecha modal ao clicar fora
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) fecharModal();
+  });
+});
+
+// ESC fecha modal
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') fecharModal();
+});
+
+carregar();
+</script>
+</body>
+</html>
