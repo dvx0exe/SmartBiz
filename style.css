@@ -102,6 +102,12 @@ body::before {
 .nav-icon { width:32px; height:32px; display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
 .sidebar-footer { margin-top:auto; padding:16px 20px; border-top:1px solid var(--border); flex-shrink:0; }
 .sidebar-footer p { font-family:'DM Mono', monospace; font-size:9px; letter-spacing:1px; color:var(--text-dim); text-transform:uppercase; }
+
+.sidebar::-webkit-scrollbar { width:3px; }
+.sidebar::-webkit-scrollbar-track { background:transparent; }
+.sidebar::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+.sidebar::-webkit-scrollbar-thumb:hover { background:var(--text-dim); }
+
 .nav-badge { margin-left:auto; background:var(--red); color:#fff; font-family:'DM Mono', monospace; font-size:9px; padding:1px 6px; border-radius:10px; letter-spacing:.5px; }
 
 /* ══ SIDEBAR OVERLAY ══════════════════════════════════════════ */
