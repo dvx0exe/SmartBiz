@@ -170,7 +170,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <span class="badge ${role==='ADMIN'?'badge-green':'badge-blue'}" style="margin-top:4px;font-size:8px;">${role}</span>
       </div>
       ${nome ? `<div style="font-size:10px;color:var(--emerald);margin-bottom:8px;font-family:'DM Mono',monospace;letter-spacing:1px;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">🏪 ${nome}</div>` : ''}
-      <button onclick="logout()" class="btn btn-ghost btn-full btn-sm">Sair</button>
+      <button onclick="logout()" class="btn btn-full btn-sm" style="background:rgba(255,80,80,.12);border:1px solid rgba(255,80,80,.35);color:#ff6b6b;margin-top:4px;letter-spacing:1px;">⏻ SAIR</button>
     `;
   }
 
