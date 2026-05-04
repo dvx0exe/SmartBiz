@@ -192,8 +192,8 @@ async function salvar() {
   btn.disabled = true;
 
   try {
-    const res = await fetch(`${BACKEND}/api/negocios/${businessId}`, {
-      method: 'PUT',
+    const res = await fetch(`${BACKEND}/api/negocios/${businessId}/setup`, {
+      method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer ' + token
