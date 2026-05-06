@@ -110,7 +110,7 @@
       var role = (function() {
         try { return JSON.parse(atob(token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))).role || ''; } catch { return ''; }
       })();
-      window.location.href = role === 'ADMIN' ? 'admin-dashboard.html' : 'index.html';
+      window.location.href = role === 'ADMIN' ? 'admin-dashboard.html' : 'cadastro.html';
     }
   </script>
 </body>

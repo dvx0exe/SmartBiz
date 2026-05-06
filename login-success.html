@@ -62,11 +62,11 @@
       window.location.href = 'admin-dashboard.html';
     } else if (role === 'USER' && businessId) {
       sessionStorage.setItem('sb_viewing_business', businessId);
-      // Primeira vez no trial → setup; caso contrário → app
+      // Primeira vez no trial → setup; caso contrário → dashboard do usuário
       if (isTrial && !localStorage.getItem('sb_trial_setup_done')) {
         window.location.href = 'trial-setup.html';
       } else {
-        window.location.href = 'index.html';
+        window.location.href = 'cadastro.html';
       }
     } else {
       localStorage.removeItem('sb_token');

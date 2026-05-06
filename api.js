@@ -70,7 +70,7 @@ window.logout = () => {
   }
 
   if (adminPages.includes(page) && role !== 'ADMIN') {
-    window.location.href = 'index.html';
+    window.location.href = 'cadastro.html';
   }
 })();
 
@@ -137,7 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 3. Bottom nav
     const curPage = window.location.pathname.split('/').pop() || 'index.html';
     const navItems = [
-      { href: 'index.html',    icon: '📊', label: 'Dashboard' },
+      { href: 'cadastro.html', icon: '📊', label: 'Dashboard' },
       { href: 'pdv.html',      icon: '🛒', label: 'PDV'       },
       { href: 'estoque.html',  icon: '📦', label: 'Estoque'   },
       { href: 'caixa.html',    icon: '💰', label: 'Caixa'     },

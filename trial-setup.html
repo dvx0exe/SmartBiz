@@ -205,7 +205,7 @@ async function salvar() {
 
     localStorage.setItem('sb_trial_setup_done', 'true');
     sessionStorage.setItem('sb_viewing_business', businessId);
-    window.location.href = 'index.html';
+    window.location.href = 'cadastro.html';
   } catch(e) {
     err.textContent = e.message;
     err.classList.add('show');
